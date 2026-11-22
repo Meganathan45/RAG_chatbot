@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic RAG System - Executive AI Interface</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: '#0B0F17',
+                        surface: '#131B2A',
+                        card: '#1C263B',
+                        cardBorder: '#2A364F',
+                        brandPrimary: '#6366F1',
+                        brandSecondary: '#A855F7',
+                        brandCyan: '#06B6D4',
+                        accentGreen: '#10B981',
+                        accentAmber: '#F59E0B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0F17;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A364F;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3B4C6B;
+        }
+
+        /* Glassmorphism effects */
+        .glass-panel {
+            background: rgba(19, 27, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(28, 38, 59, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .glow-effect {
+            box-shadow: 0 0 20px -5px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Gradient animations */
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Collapsible accordion transition */
+        .accordion-content {
+            transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .accordion-content.open {
+            max-height: 600px;
+            opacity: 1;
+        }
+
+        /* Markdown prose styling */
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            font-weight: 600;
+            color: #f8fafc;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-body h3 { font-size: 1rem; }
+        .markdown-body ul, .markdown-body ol {
+            padding-left: 1.25rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
+            list-style-type: disc;
+        }
+        .markdown-body li {
+            margin-bottom: 0.25rem;
+        }
+        .markdown-body p {
+            margin-bottom: 0.5rem;
+        }
+        .markdown-body strong {
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+        .markdown-body code {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 0.15rem 0.35rem;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #38bdf8;
+            font-family: 'Fira Code', monospace;
+        }
+    </style>
+</head>
+<body class="bg-obsidian text-slate-100 font-sans h-screen flex flex-col overflow-hidden antialiased selection:bg-brandPrimary selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="h-16 border-b border-cardBorder bg-surface/80 glass-panel px-6 flex items-center justify-between shrink-0 z-20">
+        <div class="flex items-center space-x-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-brandPrimary via-brandSecondary to-brandCyan p-[2px] flex items-center justify-center glow-effect">
+                <div class="h-full w-full bg-obsidian rounded-[10px] flex items-center justify-center">
+                    <i class="fa-solid font-bold text-transparent bg-clip-text bg-gradient-to-r from-brandPrimary to-brandCyan fa-diagram-project text-lg"></i>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h1 class="text-base font-bold text-white tracking-wide">Agentic RAG System</h1>
+                    <span class="px-2 py-0.5 text-[10px] font-semibold bg-brandPrimary/20 text-brandPrimary border border-brandPrimary/30 rounded-full">v2.5 Hybrid</span>
+                </div>
+                <p class="text-xs text-slate-400">Self-Correcting Retrieval • Multi-Tool Orchestrator • Zero-Hallucination</p>
+            </div>
+        </div>
+
+        <!-- Header Actions / System Status -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden md:flex items-center space-x-3 text-xs bg-obsidian/60 px-3 py-1.5 rounded-lg border border-cardBorder">
+                <span class="flex items-center space-x-1.5 text-slate-300">
+                    <span class="h-2 w-2 rounded-full bg-accentGreen animate-pulse"></span>
+                    <span class="font-medium" id="llmStatusText">Groq LLM Active</span>
+                </span>
+                <span class="text-slate-600">|</span>
+                <span class="text-slate-400"><i class="fa-solid fa-database text-brandCyan mr-1"></i>Pinecone Vector Index</span>
+                <span class="text-slate-600">|</span>
+                <span class="flex items-center space-x-1 text-accentGreen">
+                    <i class="fa-solid fa-server text-[10px]"></i>
+                    <span id="backendStatusIndicator">Connecting...</span>
+                </span>
+            </div>
+
+            <button id="mobileSidebarToggle" class="md:hidden text-slate-400 hover:text-white p-2">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- Sidebar (Left Panel) -->
+        <aside id="sidebar" class="w-80 border-r border-cardBorder bg-surface/50 glass-panel flex flex-col shrink-0 transition-all duration-300 z-10 absolute md:relative inset-y-0 left-0 -translate-x-full md:translate-x-0">
+            <div class="p-4 border-b border-cardBorder flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Tools & Stores</span>
+                <button id="clearChatBtn" class="text-xs text-slate-400 hover:text-rose-400 flex items-center space-x-1.5 px-2.5 py-1 rounded bg-card hover:bg-rose-500/10 border border-cardBorder transition">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                    <span>Clear Chat</span>
+                </button>
+            </div>
+
+            <!-- Active Tools List -->
+            <div class="p-4 space-y-3 overflow-y-auto flex-1">
+
+                <!-- Tool 1: Document Retrieval -->
+                <div class="p-3 rounded-xl glass-card hover:border-brandPrimary/40 transition group">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                                <i class="fa-solid fa-file-contract text-xs"></i>
+                            </div>
+                            <span class="text-xs font-semibold text-slate-200">Document Vector Search</span>
+                        </div>
+                        <span class="h-2 w-2 rounded-full bg-accentGreen" title="Active"></span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mb-2">Pinecone Vector Store (HR Policy, Handbook, Benefits)</p>
+                    <div class="flex items-center justify-between text-[10px] text-slate-500 border-t border-cardBorder/50 pt-1.5">
+                        <span>Index: hr-policy-index-v2</span>
+                        <span class="text-indigo-400 font-mono">k=3 docs</span>
+                    </div>
+                </div>
+
+                <!-- Tool 2: SQL Database -->
+                <div class="p-3 rounded-xl glass-card hover:border-brandCyan/40 transition group">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
+                                <i class="fa-solid fa-database text-xs"></i>
+                            </div>
+                            <span class="text-xs font-semibold text-slate-200">SQLite HR Database</span>
+                        </div>
+                        <span class="h-2 w-2 rounded-full bg-accentGreen" title="Active"></span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mb-2">hr_employee & employees table (5 Seeded Staff)</p>
+                    <div class="flex items-center justify-between text-[10px] text-slate-500 border-t border-cardBorder/50 pt-1.5">
+                        <span>Database: db.sqlite3</span>
+                        <span class="text-cyan-400 font-mono">NL-to-SQL</span>
+                    </div>
+                </div>
+
+                <!-- Tool 3: Web Search -->
+                <div class="p-3 rounded-xl glass-card hover:border-brandSecondary/40 transition group">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
+                                <i class="fa-solid fa-globe text-xs"></i>
+                            </div>
+                            <span class="text-xs font-semibold text-slate-200">Live Web Search</span>
+                        </div>
+                        <span class="h-2 w-2 rounded-full bg-accentGreen" title="Active"></span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mb-2">DuckDuckGo & Wikipedia (Current affairs fallback)</p>
+                    <div class="flex items-center justify-between text-[10px] text-slate-500 border-t border-cardBorder/50 pt-1.5">
+                        <span>Provider: DDGS / Wiki</span>
+                        <span class="text-purple-400 font-mono">Real-time</span>
+                    </div>
+                </div>
+
+                <!-- Tool 4: Calculator -->
+                <div class="p-3 rounded-xl glass-card hover:border-amber-500/40 transition group">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
+                                <i class="fa-solid fa-calculator text-xs"></i>
+                            </div>
+                            <span class="text-xs font-semibold text-slate-200">Arithmetic Evaluator</span>
+                        </div>
+                        <span class="h-2 w-2 rounded-full bg-accentGreen" title="Active"></span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mb-2">Sanitized Python Expression Solver</p>
+                    <div class="flex items-center justify-between text-[10px] text-slate-500 border-t border-cardBorder/50 pt-1.5">
+                        <span>Engine: Evaluator</span>
+                        <span class="text-amber-400 font-mono">Exact Math</span>
+                    </div>
+                </div>
+
+                <!-- System Safeguards Card -->
+                <div class="p-3.5 rounded-xl bg-obsidian/70 border border-cardBorder mt-4">
+                    <span class="text-[11px] font-semibold text-slate-300 block mb-2 flex items-center">
+                        <i class="fa-solid fa-shield-halved text-brandPrimary mr-1.5"></i> Active Safeguards
+                    </span>
+                    <ul class="text-[11px] text-slate-400 space-y-1.5">
+                        <li class="flex items-center space-x-1.5">
+                            <i class="fa-solid fa-check text-accentGreen text-[10px]"></i>
+                            <span>Zero Hallucination Grounding Filter</span>
+                        </li>
+                        <li class="flex items-center space-x-1.5">
+                            <i class="fa-solid fa-check text-accentGreen text-[10px]"></i>
+                            <span>LangGraph Conditional Routing</span>
+                        </li>
+                        <li class="flex items-center space-x-1.5">
+                            <i class="fa-solid fa-check text-accentGreen text-[10px]"></i>
+                            <span>Query Rewriting & Context Resolution</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Stats -->
+            <div class="p-3 border-t border-cardBorder bg-obsidian/40 text-[11px] text-slate-500 flex justify-between items-center">
+                <span>Orchestrator: LangGraph</span>
+                <span class="text-slate-400 font-mono">StateGraph API</span>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="flex-1 flex flex-col bg-obsidian/95 relative overflow-hidden">
+
+            <!-- Chat Stream Container -->
+            <div id="chatStream" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+
+                <!-- Welcome Card -->
+                <div id="welcomeCard" class="max-w-2xl mx-auto my-6 p-6 rounded-2xl glass-panel border border-cardBorder text-center space-y-4">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brandPrimary via-brandSecondary to-brandCyan p-0.5 mx-auto glow-effect">
+                        <div class="w-full h-full bg-surface rounded-[14px] flex items-center justify-center">
+                            <i class="fa-solid fa-robot text-2xl text-transparent bg-clip-text bg-gradient-to-r from-brandPrimary to-brandCyan"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white mb-1">Agentic RAG Assistant</h2>
+                        <p class="text-sm text-slate-400">Ask any question regarding HR policy documents, employee database metrics, calculations, or live web news.</p>
+                    </div>
+
+                    <!-- Prompt Suggestion Chips -->
+                    <div class="pt-2 text-left">
+                        <p class="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider text-center">Suggested Sample Prompts</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <button onclick="sendPrompt('What is the sick leave policy?')" class="p-2.5 rounded-xl glass-card hover:border-brandPrimary/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center space-x-2 group">
+                                <i class="fa-solid fa-file-lines text-indigo-400 group-hover:scale-110 transition-transform"></i>
+                                <span class="truncate">What is the sick leave policy?</span>
+                            </button>
+                            <button onclick="sendPrompt('Compare compensation and benefits')" class="p-2.5 rounded-xl glass-card hover:border-brandPrimary/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center space-x-2 group">
+                                <i class="fa-solid fa-scale-balanced text-purple-400 group-hover:scale-110 transition-transform"></i>
+                                <span class="truncate">Compare compensation and benefits</span>
+                            </button>
+                            <button onclick="sendPrompt('How many employees are in the database?')" class="p-2.5 rounded-xl glass-card hover:border-brandCyan/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center space-x-2 group">
+                                <i class="fa-solid fa-users text-cyan-400 group-hover:scale-110 transition-transform"></i>
+                                <span class="truncate">How many employees are in the database?</span>
+                            </button>
+                            <button onclick="sendPrompt('12 * 8 + 5')" class="p-2.5 rounded-xl glass-card hover:border-amber-500/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center space-x-2 group">
+                                <i class="fa-solid fa-calculator text-amber-400 group-hover:scale-110 transition-transform"></i>
+                                <span class="truncate">12 * 8 + 5</span>
+                            </button>
+                            <button onclick="sendPrompt('Who is the current Chief Minister of Tamil Nadu?')" class="p-2.5 rounded-xl glass-card hover:border-purple-500/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center space-x-2 group md:col-span-2">
+                                <i class="fa-solid fa-globe text-purple-400 group-hover:scale-110 transition-transform"></i>
+                                <span class="truncate">Who is the current Chief Minister of Tamil Nadu?</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Input Box Container -->
+            <div class="p-4 md:p-6 bg-surface/40 border-t border-cardBorder/80 glass-panel shrink-0">
+                <div class="max-w-3xl mx-auto relative">
+                    <form id="chatForm" onsubmit="handleFormSubmit(event)" class="relative flex items-center">
+                        <input id="userInput" type="text" placeholder="Ask policy questions, query employee database, compute arithmetic..." 
+                            class="w-full bg-obsidian/90 text-slate-100 placeholder-slate-500 text-sm rounded-xl pl-4 pr-24 py-3.5 border border-cardBorder focus:outline-none focus:border-brandPrimary focus:ring-1 focus:ring-brandPrimary transition shadow-inner"
+                            autocomplete="off" />
+                        
+                        <div class="absolute right-2 flex items-center space-x-1.5">
+                            <button type="submit" id="sendBtn" class="h-9 px-4 rounded-lg bg-gradient-to-r from-brandPrimary to-brandSecondary hover:opacity-90 text-white text-xs font-semibold flex items-center space-x-1.5 transition shadow-lg shadow-brandPrimary/25">
+                                <span>Send</span>
+                                <i class="fa-solid fa-paper-plane text-xs"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 mt-2 px-1">
+                        <span>Grounded in official organization documents & HR Database</span>
+                        <span class="hidden sm:inline">LangGraph State Machine Agent</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // API Base URL Detection
+        const API_BASE = window.location.origin.startsWith('http') 
+            ? window.location.origin 
+            : 'http://127.0.0.1:8000';
+
+        // DOM Element Selectors
+        const chatStream = document.getElementById('chatStream');
+        const welcomeCard = document.getElementById('welcomeCard');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const sidebar = document.getElementById('sidebar');
+        const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+        const backendStatusIndicator = document.getElementById('backendStatusIndicator');
+
+        // Check backend health on load
+        async function checkBackendHealth() {
+            try {
+                const res = await fetch(`${API_BASE}/api/health/`, { method: 'GET' });
+                if (res.ok) {
+                    backendStatusIndicator.textContent = 'Backend Online';
+                    backendStatusIndicator.parentElement.classList.remove('text-amber-400', 'text-rose-400');
+                    backendStatusIndicator.parentElement.classList.add('text-accentGreen');
+                } else {
+                    backendStatusIndicator.textContent = 'Backend Responding';
+                }
+            } catch (e) {
+                backendStatusIndicator.textContent = 'Backend Standby';
+                backendStatusIndicator.parentElement.classList.remove('text-accentGreen');
+                backendStatusIndicator.parentElement.classList.add('text-amber-400');
+            }
+        }
+        checkBackendHealth();
+        setInterval(checkBackendHealth, 30000);
+
+        // Mobile Sidebar Toggle
+        mobileSidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Clear Chat Action
+        document.getElementById('clearChatBtn').addEventListener('click', () => {
+            chatStream.innerHTML = '';
+            if (welcomeCard) {
+                chatStream.appendChild(welcomeCard);
+                welcomeCard.style.display = 'block';
+            }
+        });
+
+        // Helper: Send Quick Prompt from Suggestion Chips
+        function sendPrompt(text) {
+            userInput.value = text;
+            handleFormSubmit(new Event('submit'));
+        }
+
+        // Main Handler for Form Submission
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // Hide Welcome Card on first interaction
+            if (welcomeCard) {
+                welcomeCard.style.display = 'none';
+            }
+
+            // Disable submit button during request
+            sendBtn.disabled = true;
+            sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // 1. Render User Message
+            renderUserMessage(text);
+            userInput.value = '';
+
+            // 2. Render Agent Reasoning Thinking Container
+            const responseId = 'resp-' + Date.now();
+            renderAgentThinking(responseId);
+            scrollToBottom();
+
+            // 3. Execute Real Agent Pipeline via Backend API
+            await executeAgentPipeline(text, responseId);
+
+            // Re-enable send button
+            sendBtn.disabled = false;
+            sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            userInput.focus();
+        }
+
+        // Render User Chat Bubble
+        function renderUserMessage(text) {
+            const userHtml = `
+                <div class="flex justify-end mb-4">
+                    <div class="max-w-[85%] md:max-w-[70%] rounded-2xl rounded-tr-none bg-gradient-to-r from-brandPrimary to-brandSecondary p-3.5 text-white shadow-lg text-sm">
+                        <p class="leading-relaxed">${escapeHtml(text)}</p>
+                    </div>
+                </div>
+            `;
+            chatStream.insertAdjacentHTML('beforeend', userHtml);
+            scrollToBottom();
+        }
+
+        // Render Agent Placeholder with Thinking Visualizer
+        function renderAgentThinking(id) {
+            const agentHtml = `
+                <div id="${id}" class="flex space-x-3 mb-6 max-w-[95%] md:max-w-[85%]">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brandPrimary to-brandCyan flex items-center justify-center shrink-0 text-white text-xs font-bold glow-effect">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="flex-1 space-y-3">
+                        
+                        <!-- Reasoning Trace Accordion -->
+                        <div class="rounded-xl glass-card border border-cardBorder overflow-hidden">
+                            <button onclick="toggleAccordion('${id}-accordion')" class="w-full p-2.5 bg-card/80 hover:bg-card flex items-center justify-between text-xs text-slate-300 transition">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-spinner animate-spin text-brandCyan" id="${id}-spinner"></i>
+                                    <span class="font-semibold text-slate-200" id="${id}-status">Agent Pipeline Executing...</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-slate-500 text-[10px] transition-transform duration-200" id="${id}-chevron"></i>
+                            </button>
+                            <div id="${id}-accordion" class="accordion-content open p-3 bg-obsidian/60 space-y-2 border-t border-cardBorder/50 font-mono text-[11px]">
+                                <div id="${id}-steps" class="space-y-1.5 text-slate-400">
+                                    <div id="step-${id}-init" class="flex items-center space-x-2">
+                                        <i class="fa-solid fa-spinner animate-spin text-brandCyan text-[10px]"></i>
+                                        <span>Connecting to LangGraph agent orchestrator...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Final Answer Body Container -->
+                        <div id="${id}-answer" class="hidden rounded-2xl rounded-tl-none glass-panel p-4 text-slate-100 text-sm leading-relaxed border border-cardBorder space-y-3">
+                        </div>
+
+                    </div>
+                </div>
+            `;
+            chatStream.insertAdjacentHTML('beforeend', agentHtml);
+        }
+
+        // Toggle Accordion Collapse
+        function toggleAccordion(accordionId) {
+            const content = document.getElementById(accordionId);
+            const chevron = document.getElementById(`${accordionId.replace('-accordion', '')}-chevron`);
+            content.classList.toggle('open');
+            if (chevron) chevron.classList.toggle('rotate-180');
+        }
+
+        // Execute Real Agent Pipeline via Backend
+        async function executeAgentPipeline(query, responseId) {
+            const stepsContainer = document.getElementById(`${responseId}-steps`);
+            const statusText = document.getElementById(`${responseId}-status`);
+            const spinner = document.getElementById(`${responseId}-spinner`);
+            const accordion = document.getElementById(`${responseId}-accordion`);
+            const answerContainer = document.getElementById(`${responseId}-answer`);
+
+            try {
+                // Call real Django /api/chat/ endpoint
+                const response = await fetch(`${API_BASE}/api/chat/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: query })
+                });
+
+                if (!response.ok) {
+                    const errJson = await response.json().catch(() => ({}));
+                    throw new Error(errJson.error || `Server responded with status ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Clear init step
+                stepsContainer.innerHTML = '';
+
+                // Render dynamic pipeline execution steps returned from LangGraph backend
+                if (data.steps && Array.isArray(data.steps) && data.steps.length > 0) {
+                    for (const step of data.steps) {
+                        const stepHtml = `
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-check text-accentGreen text-[10px]"></i>
+                                <span class="text-slate-300">${step.result || step.label}</span>
+                            </div>
+                        `;
+                        stepsContainer.insertAdjacentHTML('beforeend', stepHtml);
+                    }
+                } else {
+                    stepsContainer.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-check text-accentGreen text-[10px]"></i>
+                            <span class="text-slate-300">Agent workflow execution completed successfully</span>
+                        </div>
+                    `;
+                }
+
+                // Complete Pipeline Visuals
+                spinner.className = 'fa-solid fa-circle-check text-accentGreen';
+                statusText.textContent = `Completed (${(data.tool || 'RAG').toUpperCase()} Agent)`;
+
+                // Format Answer using Marked if available
+                let formattedAnswer = data.answer || "No response received.";
+                if (typeof marked !== 'undefined' && marked.parse) {
+                    formattedAnswer = marked.parse(formattedAnswer);
+                } else {
+                    formattedAnswer = `<div>${escapeHtml(formattedAnswer).replace(/\n/g, '<br>')}</div>`;
+                }
+
+                let answerHtml = `<div class="markdown-body">${formattedAnswer}</div>`;
+
+                // Append SQL Snippet if available
+                if (data.sql_query) {
+                    answerHtml += `
+                        <div class="mt-2 p-2.5 rounded-lg bg-obsidian border border-cardBorder font-mono text-xs text-amber-300">
+                            <span class="text-slate-500 block text-[10px]">EXECUTED SQL QUERY:</span>
+                            ${escapeHtml(data.sql_query)}
+                        </div>
+                    `;
+                }
+
+                // Append Grounded Sources Chips
+                if (data.sources && Array.isArray(data.sources) && data.sources.length > 0) {
+                    answerHtml += `
+                        <div class="pt-3 border-t border-cardBorder/60 flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
+                            <span class="font-semibold text-slate-300 text-[11px]"><i class="fa-solid fa-bookmark text-brandPrimary mr-1"></i>Sources:</span>
+                            ${data.sources.map(src => `
+                                <span class="px-2 py-0.5 rounded-md bg-brandPrimary/10 border border-brandPrimary/20 text-indigo-300 text-[11px] font-mono flex items-center space-x-1">
+                                    <i class="fa-solid fa-file-shield text-[10px]"></i>
+                                    <span>${escapeHtml(src)}</span>
+                                </span>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                // Render answer
+                answerContainer.innerHTML = answerHtml;
+                answerContainer.classList.remove('hidden');
+
+                // Auto collapse accordion slightly after completion
+                setTimeout(() => {
+                    accordion.classList.remove('open');
+                }, 2000);
+
+            } catch (err) {
+                console.error("API error:", err);
+                spinner.className = 'fa-solid fa-triangle-exclamation text-rose-400';
+                statusText.textContent = 'Pipeline Error';
+                
+                stepsContainer.innerHTML = `
+                    <div class="text-rose-400 text-xs">
+                        <i class="fa-solid fa-circle-xmark mr-1.5"></i>
+                        <span>Failed to connect to backend: ${escapeHtml(err.message)}</span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-1">
+                        Ensure the Django backend server is running on <code class="text-amber-300">${API_BASE}</code> (Run: <code class="text-brandCyan">python manage.py runserver</code>).
+                    </div>
+                `;
+
+                answerContainer.innerHTML = `
+                    <div class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs">
+                        <strong>Connection Error:</strong> Could not reach the Agentic RAG backend server. Please verify the Django server is running.
+                    </div>
+                `;
+                answerContainer.classList.remove('hidden');
+            }
+
+            scrollToBottom();
+        }
+
+        // Helper Utilities
+        function scrollToBottom() {
+            chatStream.scrollTop = chatStream.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+</html>

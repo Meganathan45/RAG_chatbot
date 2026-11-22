@@ -1,0 +1,28 @@
+# ==============================================================================
+# Agentic RAG System - Production Dependencies
+# ==============================================================================
+
+# Web Framework & API
+django>=4.2,<6.2
+djangorestframework>=3.14.0
+django-cors-headers>=4.3.0
+python-dotenv>=1.0.0
+
+# LangChain & LangGraph Orchestration
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-groq>=0.2.0
+langchain-huggingface>=0.1.0
+langchain-text-splitters>=0.3.0
+langgraph>=0.2.0
+
+# LLM & Vector Store SDKs
+groq>=0.11.0
+pinecone>=5.0.0
+sentence-transformers>=3.0.0
+torch>=2.0.0
+
+# Search & Utilities
+ddgs>=9.0.0
+requests>=2.31.0
+pypdf>=4.0.0

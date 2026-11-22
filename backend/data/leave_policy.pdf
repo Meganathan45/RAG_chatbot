@@ -1,0 +1,32 @@
+Walkthrough 1 — Simple Policy Lookup  
+User: “What is the sick leave policy?”  
+planner → policy plan   |   tool_selector → retrieve   |   retrieve → Leave policy 
+Handbook.pdf chunks  
+grade → generate (keyword overlap match)   |   generate → fast rule (“80 hours paid sick 
+leave”)  
+Assistant: “Employees receive 80 Hours Paid Sick Leave annually. The leave is granted on 
+January 1 each year. New hires receive a prorated allocation.” followed by a Sources: Leave 
+policy Handbook.pdf line.  
+Walkthrough 2 — Comparison Question  
+User: “Compare compensation and benefits.”  
+planner → comparison plan   |   decompose → 2 sub-queries   |   tool_selector → retrieve 
+retrieve runs both sub-queries independently   |   grade → generate for each   |   
+final_synthesis → LLM bullet comparison  
+Assistant receives a short bulleted comparison of compensation types versus employee 
+benefits, followed by the raw per-topic answers as backup and a combined Sources list.  
+Walkthrough 3 — Structured Data Question User: 
+“How many employees are there?”  
+tool_selector → sql   |   sql_node fast-path → SELECT COUNT(id) FROM employees  
+Agentic RAG System — Documentation  
+ 
+Assistant: “Total Employees: 5” (against the seeded sample database).  
+Walkthrough 4 — Current-Affairs Question  
+User: “Who is the current Chief Minister of Tamil Nadu?”  
+tool_selector → web   |   web_node rewrites query → DDGS search → LLM extracts name + 
+title  
+Assistant returns the name and title found in the live search results, since this falls outside the 
+HR document knowledge base.  
+Walkthrough 5 — Calculator  
+User: “12 * 8 + 5”  
+tool_selector → calculator (regex match)   |   eval(“12 * 8 + 5”)  
+Assistant: “101” 
